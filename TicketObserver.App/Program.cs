@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+
+
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
 builder.Configuration.AddJsonFile("appsettings.json");
