@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using TicketObserver.EntityFramework.SourceGenerator.Extensions;
 
 namespace TicketObserver.EntityFramework.SourceGenerator.Generators;
 
@@ -86,20 +87,31 @@ public class RelationPropertyGenerator : IIncrementalGenerator
                     .NamedArguments.
                     FirstOrDefault(x => x.Key == PropertyName)
                     .Value.Value!.ToString();
-                
-                string idPropertyName = (fieldSymbol.Name.Length > 2 && fieldSymbol.Name.Substring(fieldSymbol.Name.Length - 2) == "Id")
-                    ? System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(fieldSymbol.Name)
-                    : System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(fieldSymbol.Name + "Id");
 
-                if (idPropertyName[0] == '_') idPropertyName = idPropertyName.Substring(1);
-                
-                string propertyName = idPropertyName.Substring(0, idPropertyName.Length - 2);
+                string fieldName = fieldSymbol.Name;
+                string idPropertyName;
+                string propertyName;
+                if (fieldName.Length > 2 && fieldName.Substring(fieldName.Length - 2) == "Id")
+                {
+                    idPropertyName = fieldName.ConvertToPascalCase();
+                    propertyName = idPropertyName.Substring(0, idPropertyName.Length - 2);
+                }
+                else
+                {
+                    propertyName = fieldName.ConvertToPascalCase();
+                    idPropertyName = propertyName + "Id"; 
+                }
                 
                 string idTypeName = fieldSymbol.Type.Name;
 
                 builder.Append($$"""
                                  
-                                         public {{idTypeName}} {{idPropertyName}} { get; set; }
+                                         public {{idTypeName}} {{idPropertyName}}
+                                         { 
+                                             get => {{fieldName}}; 
+                                             set => {{fieldName}} = value;
+                                         }
+                                         
                                          public virtual {{propertyTypeName}} {{propertyName}} { get; set; }
                                  """);
             }

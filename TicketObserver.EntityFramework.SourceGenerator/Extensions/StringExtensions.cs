@@ -1,4 +1,4 @@
-﻿namespace Extensions;
+﻿namespace TicketObserver.EntityFramework.SourceGenerator.Extensions;
 
 public static class StringExtensions
 {
