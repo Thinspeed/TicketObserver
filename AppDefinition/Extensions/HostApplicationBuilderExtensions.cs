@@ -37,6 +37,7 @@ public static class HostApplicationBuilderExtensions
             }
         }
             
-        definition.AddDefinition(builder);
+        definition.RegisterDefinition(builder);
+        handledDefinitions.Add(definition);
     }
 }

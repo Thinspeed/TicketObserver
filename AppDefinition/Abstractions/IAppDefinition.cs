@@ -7,7 +7,7 @@ public interface IAppDefinition
 {
     public IAppDefinition[] DependsOn => [];
     
-    void AddDefinition(IHostApplicationBuilder builder);
+    void RegisterDefinition(IHostApplicationBuilder builder);
 
     void Init(IServiceProvider serviceProvider);
 }
