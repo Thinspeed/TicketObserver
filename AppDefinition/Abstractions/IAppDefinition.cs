@@ -9,5 +9,5 @@ public interface IAppDefinition
     
     void RegisterDefinition(IHostApplicationBuilder builder);
 
-    void Init(IServiceProvider serviceProvider);
+    void Init(IServiceProvider serviceProvider) { }
 }
