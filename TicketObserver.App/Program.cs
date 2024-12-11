@@ -13,8 +13,6 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
 builder.Configuration.AddJsonFile("appsettings.json");
 
-builder.Logging.AddConsole();
-
 builder.Services.AddHostedService<ObserverBackgroundService>();
 builder.Services.AddSingleton<ITicketObserver, Observer>();
 
@@ -28,3 +26,6 @@ ApplicationDbContext? dbContext = app.Services.GetService<ApplicationDbContext>(
 var a = dbContext!.Set<Ticket>().ToList();
 
 await app.RunAsync();
+
+
+public partial class Program;

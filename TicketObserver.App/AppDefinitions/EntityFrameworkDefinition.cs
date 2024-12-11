@@ -4,33 +4,37 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace EfSelector.AppDefinitions;
 
 public class EntityFrameworkDefinition : IAppDefinition
 {
-    public void AddDefinition(IHostApplicationBuilder builder)
+    public void RegisterDefinition(IHostApplicationBuilder builder)
     {
         string connectionString = builder.Configuration.GetSection("ReadWriteConnectionString").Value 
                                    ?? throw new InvalidOperationException("Read/write connection string was not provided");
         
         string migrationConnectionString = builder.Configuration.GetSection("MigrationConnectionString").Value 
-                                            ?? throw new InvalidOperationException("Read/write connection string was not provided");
+                                  ?? throw new InvalidOperationException("Migration connection string was not provided");
         
-        builder.Services.AddDbContext<ApplicationDbContext>(options => 
-            options.UseNpgsql(connectionString));
+        builder.Services.AddDbContext<ApplicationDbContext>(options => options
+            .UseNpgsql(connectionString));
         
-        builder.Services.AddDbContext<MigrationDbContext>(options =>
-            options.UseNpgsql(migrationConnectionString));
+        builder.Services.AddDbContext<MigrationDbContext>(options => options
+            .UseNpgsql(migrationConnectionString));
     }
 
     public void Init(IServiceProvider serviceProvider)
     {
-        IConfiguration configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        ILogger<Program> logger = serviceProvider.GetService<ILogger<Program>>()!;
         
-        MigrationDbContext dbContext = serviceProvider.GetService<MigrationDbContext>() 
-                                       ?? throw new InvalidOperationException("Migration context was not provided");
+        using var dbContext = serviceProvider.GetRequiredService<MigrationDbContext>();
+        
+        logger.LogInformation("Применение миграций...");
         
         dbContext.Database.Migrate();
+        
+        logger.LogInformation("Миграции применены."); 
     }
 }

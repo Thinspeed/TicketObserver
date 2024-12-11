@@ -5,6 +5,7 @@ namespace EntityFramework.Preferences;
 
 public class MigrationDbContext : DbContext
 {
+
     public MigrationDbContext(DbContextOptions<MigrationDbContext> options)
         : base(options)
     {
