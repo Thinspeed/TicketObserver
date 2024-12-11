@@ -1,8 +1,9 @@
 using System.Globalization;
 using AngleSharp;
 using AngleSharp.Dom;
-using Microsoft.Extensions.Configuration;
+using EntityFramework.Preferences;
 using Microsoft.Extensions.Logging;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace EfSelector.Observer;
 
@@ -10,13 +11,14 @@ public class Observer : ITicketObserver
 {
     private string _uri;
     private long _isRunning = 0;
-    private Thread _workingThread;
+    private readonly Thread _workingThread;
 
     private readonly IBrowsingContext _context;
-    private readonly ILogger<Observer> _logger;
+    private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger _logger;
     
     
-    public Observer(ILogger<Observer> logger, Microsoft.Extensions.Configuration.IConfiguration configuration)
+    public Observer(ILogger<Program> logger, IConfiguration configuration, ApplicationDbContext dbContext)
     {
         _workingThread = new Thread(Observe);
 
@@ -24,6 +26,8 @@ public class Observer : ITicketObserver
 
         AngleSharp.IConfiguration angleConfig = Configuration.Default.WithDefaultLoader();
         _context = BrowsingContext.New(angleConfig);
+        
+        _dbContext = dbContext;
         
         _logger = logger;
     }
@@ -66,14 +70,12 @@ public class Observer : ITicketObserver
             List<IElement> rows = document.All.Where(row => row.HasAttribute(attribute)).ToList();
             foreach (IElement row in rows)
             {
-                Console.WriteLine($"{DateTime.Now}: sending request...");
+                _logger.LogInformation($"{DateTime.Now}: sending request...");
                 IElement? cell = row.Children.LastOrDefault();
                 if (cell is null || !cell.ClassList.Contains(countCellClass))
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    _logger.LogInformation(row.TextContent);
-                    Console.ForegroundColor = ConsoleColor.Gray;
-
+                    _logger.LogCritical(row.TextContent);
+                    
                     continue;
                 }
         
@@ -87,10 +89,8 @@ public class Observer : ITicketObserver
                 {
                     continue;
                 }
-        
-                Console.ForegroundColor = ConsoleColor.Green;
+                
                 _logger.LogInformation($"Доступен билет на поезд в {time.Hour}:{time.Minute}");
-                Console.ForegroundColor = ConsoleColor.Gray;
             }
     
             Thread.Sleep(2000);

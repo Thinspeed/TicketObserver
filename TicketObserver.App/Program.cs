@@ -5,7 +5,6 @@ using EntityFramework.Preferences;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using TicketObserver.Domain.Entities;
 
 
@@ -14,7 +13,7 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services.AddHostedService<ObserverBackgroundService>();
-builder.Services.AddSingleton<ITicketObserver, Observer>();
+builder.Services.AddScoped<ITicketObserver, Observer>();
 
 builder.AddAppDefinitions();
 
