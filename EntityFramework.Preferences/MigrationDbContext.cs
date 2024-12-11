@@ -1,16 +1,15 @@
-﻿using System.Reflection;
 using EntityFramework.Preferences.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace EntityFramework.Preferences;
 
-public class ApplicationDbContext : DbContext
+public class MigrationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public MigrationDbContext(DbContextOptions<MigrationDbContext> options)
         : base(options)
     {
     }
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ConfigurationMarker).Assembly);
