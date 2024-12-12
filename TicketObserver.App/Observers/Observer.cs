@@ -1,6 +1,7 @@
 using System.Globalization;
 using AngleSharp;
 using AngleSharp.Dom;
+using EfSelector.Parsers;
 using EntityFramework.Preferences;
 using Microsoft.Extensions.Logging;
 using TicketObserver.Domain.Entities;
@@ -17,9 +18,13 @@ public class Observer : ITicketObserver
     private readonly IBrowsingContext _context;
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger _logger;
+    private readonly IParser _parser;
     
-    
-    public Observer(ILogger<Program> logger, IConfiguration configuration, ApplicationDbContext dbContext)
+    public Observer(
+        ILogger<Program> logger, 
+        IConfiguration configuration, 
+        ApplicationDbContext dbContext,
+        IParser parser)
     {
         _workingThread = new Thread(Observe);
 
@@ -29,8 +34,8 @@ public class Observer : ITicketObserver
         _context = BrowsingContext.New(angleConfig);
         
         _dbContext = dbContext;
-        
         _logger = logger;
+        _parser = parser;
     }
     
     public void Start()
@@ -68,42 +73,8 @@ public class Observer : ITicketObserver
             
             IDocument document = await _context.OpenAsync(_uri);
             
-            string attribute = "data-train-number";
-            string cellWithNumberClass = "cell-1";
-            string cellWithTimeClass = "cell-4";
-            string emptyCellClass = "empty";
+            List<Train> parser = _parser.GetAvailableTrains(document);
             
-            List<IElement> rows = document.All.Where(row => row.HasAttribute(attribute)).ToList();
-            
-            foreach (IElement row in rows)
-            {
-                IElement? cellWithTime = row.Children.LastOrDefault();
-                IElement? cellWithNumber = row.Children.FirstOrDefault();
-                
-                if (cellWithTime is null || !cellWithTime.ClassList.Contains(cellWithTimeClass) ||
-                    cellWithNumber is null || cellWithNumber.ClassList.Contains(cellWithNumberClass))
-                {
-                    _logger.LogCritical(row.TextContent);
-                    
-                    continue;
-                }
-        
-                if (cellWithTime.ClassList.Contains(emptyCellClass))
-                {
-                    continue;
-                }
-
-                DateTime time = DateTime.ParseExact(row.QuerySelector(".train-from-time")!.InnerHtml, "HH:mm", CultureInfo.InvariantCulture);
-                if (time.Hour < 6 || time.Hour > 15)
-                {
-                    continue;
-                }
-                
-                string trainNumber = row.QuerySelector(".train-number")!.InnerHtml;
-                var train = new Train(trainNumber, time);
-
-                //_logger.LogInformation($"Доступен билет на поезд в {time.Hour}:{time.Minute}");
-            }
     
             Thread.Sleep(2000);
         }
