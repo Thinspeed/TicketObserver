@@ -3,6 +3,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using EntityFramework.Preferences;
 using Microsoft.Extensions.Logging;
+using TicketObserver.Domain.Entities;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace EfSelector.Observer;
@@ -63,23 +64,31 @@ public class Observer : ITicketObserver
     {
         while (Interlocked.Read(ref _isRunning) == 1)
         {
+            _logger.LogInformation($"{DateTime.Now}: sending request...");
+            
             IDocument document = await _context.OpenAsync(_uri);
+            
             string attribute = "data-train-number";
-            string countCellClass = "cell-4";
+            string cellWithNumberClass = "cell-1";
+            string cellWithTimeClass = "cell-4";
             string emptyCellClass = "empty";
+            
             List<IElement> rows = document.All.Where(row => row.HasAttribute(attribute)).ToList();
+            
             foreach (IElement row in rows)
             {
-                _logger.LogInformation($"{DateTime.Now}: sending request...");
-                IElement? cell = row.Children.LastOrDefault();
-                if (cell is null || !cell.ClassList.Contains(countCellClass))
+                IElement? cellWithTime = row.Children.LastOrDefault();
+                IElement? cellWithNumber = row.Children.FirstOrDefault();
+                
+                if (cellWithTime is null || !cellWithTime.ClassList.Contains(cellWithTimeClass) ||
+                    cellWithNumber is null || cellWithNumber.ClassList.Contains(cellWithNumberClass))
                 {
                     _logger.LogCritical(row.TextContent);
                     
                     continue;
                 }
         
-                if (cell.ClassList.Contains(emptyCellClass))
+                if (cellWithTime.ClassList.Contains(emptyCellClass))
                 {
                     continue;
                 }
@@ -90,7 +99,10 @@ public class Observer : ITicketObserver
                     continue;
                 }
                 
-                _logger.LogInformation($"Доступен билет на поезд в {time.Hour}:{time.Minute}");
+                string trainNumber = row.QuerySelector(".train-number")!.InnerHtml;
+                var train = new Train(trainNumber, time);
+
+                //_logger.LogInformation($"Доступен билет на поезд в {time.Hour}:{time.Minute}");
             }
     
             Thread.Sleep(2000);
