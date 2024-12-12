@@ -73,7 +73,7 @@ public class Observer : ITicketObserver
             
             IDocument document = await _context.OpenAsync(_uri);
             
-            List<Train> parser = _parser.GetAvailableTrains(document);
+            List<Ticket> parser = _parser.GetAvailableTrains(document);
             
     
             Thread.Sleep(2000);

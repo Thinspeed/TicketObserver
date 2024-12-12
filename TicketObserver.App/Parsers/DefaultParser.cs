@@ -19,10 +19,10 @@ public class DefaultParser : IParser
         _logger = logger;
     }
     
-    public List<Train> GetAvailableTrains(IDocument document)
+    public List<Ticket> GetAvailableTrains(IDocument document)
     {
         List<IElement> rows = document.All.Where(row => row.HasAttribute(Attribute)).ToList();
-        List<Train> trains = [];
+        List<Ticket> trains = [];
         
         foreach (IElement row in rows)
         {
@@ -49,7 +49,7 @@ public class DefaultParser : IParser
                 
             string trainNumber = row.QuerySelector(".train-number")!.InnerHtml;
             
-            var train = new Train(trainNumber, time);
+            var train = new Ticket(trainNumber, time, DateTime.Now);
             trains.Add(train);
             //_logger.LogInformation($"Доступен билет на поезд в {time.Hour}:{time.Minute}");
         }

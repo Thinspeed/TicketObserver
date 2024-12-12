@@ -5,5 +5,5 @@ namespace EfSelector.Parsers;
 
 public interface IParser
 {
-    List<Train> GetAvailableTrains(IDocument document);
+    List<Ticket> GetAvailableTrains(IDocument document);
 }
