@@ -3,9 +3,9 @@ using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
 using TicketObserver.Domain.Entities;
 
-namespace EfSelector.Parsers;
+namespace EfSelector.Parsers.TicketParser;
 
-public class DefaultParser : IParser
+public class TicketParser : IParser<TicketParserModel>
 {
     private const string Attribute = "data-train-number";
     private const string CellWithNumberClass = "cell-1";
@@ -14,15 +14,15 @@ public class DefaultParser : IParser
 
     private readonly ILogger _logger;
     
-    public DefaultParser(ILogger<Program> logger)
+    public TicketParser(ILogger<Program> logger)
     {
         _logger = logger;
     }
     
-    public List<Ticket> GetAvailableTrains(IDocument document)
+    public List<TicketParserModel> Parse(IDocument document)
     {
         List<IElement> rows = document.All.Where(row => row.HasAttribute(Attribute)).ToList();
-        List<Ticket> trains = [];
+        List<TicketParserModel> trains = [];
         
         foreach (IElement row in rows)
         {
@@ -42,14 +42,14 @@ public class DefaultParser : IParser
             {
                 continue;
             }
-
-            DateTime time = DateTime.ParseExact(
+            
+            TimeOnly time = TimeOnly.ParseExact(
                 row.QuerySelector(".train-from-time")!.InnerHtml, "HH:mm",
                 CultureInfo.InvariantCulture);
                 
             string trainNumber = row.QuerySelector(".train-number")!.InnerHtml;
             
-            var train = new Ticket(trainNumber, time, DateTime.Now);
+            var train = new TicketParserModel(trainNumber, time);
             trains.Add(train);
             //_logger.LogInformation($"Доступен билет на поезд в {time.Hour}:{time.Minute}");
         }

@@ -2,6 +2,7 @@ using System.Globalization;
 using AngleSharp;
 using AngleSharp.Dom;
 using EfSelector.Parsers;
+using EfSelector.Parsers.TicketParser;
 using EntityFramework.Preferences;
 using Microsoft.Extensions.Logging;
 using TicketObserver.Domain.Entities;
@@ -15,32 +16,39 @@ public class Observer : ITicketObserver
     private long _isRunning = 0;
     private readonly Thread _workingThread;
 
-    private readonly IBrowsingContext _context;
+    //todo нужно изменить логику(передавать дату или обновлять её при каждом запросе)
+    private readonly DateOnly _observationDate;
+
+    private readonly IBrowsingContext _browsingContext;
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger _logger;
-    private readonly IParser _parser;
-    
+    private readonly IParser<TicketParserModel> _parser;
+
     public Observer(
-        ILogger<Program> logger, 
-        IConfiguration configuration, 
+        ILogger<Program> logger,
+        IConfiguration configuration,
         ApplicationDbContext dbContext,
-        IParser parser)
+        IParser<TicketParserModel> parser)
     {
         _workingThread = new Thread(Observe);
 
-        _uri = configuration.GetSection("uri").Value ?? throw new NullReferenceException("uri");
+        //_observationDate = DateOnly.FromDateTime(DateTime.Today);
+        _observationDate = new DateOnly(2024, 12, 18);
+        
+        string uri = configuration.GetSection("uri").Value ?? throw new NullReferenceException("uri");
+        _uri = uri + _observationDate.ToString("yyyy-MM-dd");
 
         AngleSharp.IConfiguration angleConfig = Configuration.Default.WithDefaultLoader();
-        _context = BrowsingContext.New(angleConfig);
-        
+        _browsingContext = BrowsingContext.New(angleConfig);
+
         _dbContext = dbContext;
         _logger = logger;
         _parser = parser;
     }
-    
+
     public void Start()
     {
-        
+
         if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 0)
         {
             _workingThread.Start();
@@ -51,7 +59,7 @@ public class Observer : ITicketObserver
             _logger.LogInformation("Цикл уже работает.");
         }
     }
-    
+
     public void Stop()
     {
         if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 0)
@@ -69,13 +77,47 @@ public class Observer : ITicketObserver
     {
         while (Interlocked.Read(ref _isRunning) == 1)
         {
-            _logger.LogInformation($"{DateTime.Now}: sending request...");
+            if (_observationDate > DateOnly.FromDateTime(DateTime.Today))
+            {
+                _logger.LogInformation("End observation.");
+            }
+
+            _logger.LogInformation("Sending request...");
+
+            IDocument document = await _browsingContext.OpenAsync(_uri);
+            DateTime lastRequestTime = DateTime.Now;
+
+            List<Ticket> availableTickets = _parser.Parse(document)
+                .Select(x => new Ticket(
+                    x.TrainNumber,
+                    _observationDate.ToDateTime(x.DepartureTime),
+                    lastRequestTime))
+                .ToList();
+
+            List<Ticket> existingTickets = _dbContext.Set<Ticket>()
+                .Where(dbTicket => availableTickets.Any(x =>
+                    x.TrainNumber == dbTicket.TrainNumber &&
+                    x.DepartureDate == dbTicket.DepartureDate))
+                .ToList();
+
+            foreach (var availableTicket in availableTickets)
+            {
+                var ticket = existingTickets.FirstOrDefault(t =>
+                    t.TrainNumber == availableTicket.TrainNumber &&
+                    t.DepartureDate == availableTicket.DepartureDate);
+
+                if (ticket is null)
+                {
+                    _dbContext.Set<Ticket>().Add(availableTicket);
+                }
+                else
+                {
+                    ticket.ObservedTime = availableTicket.ObservedTime;
+                }
+            }
             
-            IDocument document = await _context.OpenAsync(_uri);
+            await _dbContext.SaveChangesAsync();
             
-            List<Ticket> parser = _parser.GetAvailableTrains(document);
-            
-    
             Thread.Sleep(2000);
         }
     }

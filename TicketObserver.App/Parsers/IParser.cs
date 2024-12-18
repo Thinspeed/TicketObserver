@@ -3,7 +3,7 @@ using TicketObserver.Domain.Entities;
 
 namespace EfSelector.Parsers;
 
-public interface IParser
+public interface IParser<T>
 {
-    List<Ticket> GetAvailableTrains(IDocument document);
+    List<T> Parse(IDocument document);
 }
