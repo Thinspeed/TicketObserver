@@ -9,7 +9,7 @@ public class TicketParser : IParser<TicketParserModel>
 {
     private const string Attribute = "data-train-number";
     private const string CellWithNumberClass = "cell-1";
-    private const string CellWithTimeClass = "cell-4";
+    private const string CellWithTicketsCountClass = "cell-4";
     private const string EmptyCellClass = "empty";
 
     private readonly ILogger _logger;
@@ -26,11 +26,11 @@ public class TicketParser : IParser<TicketParserModel>
         
         foreach (IElement row in rows)
         {
-            IElement? cellWithTime = row.Children.LastOrDefault();
-            IElement? cellWithNumber = row.Children.FirstOrDefault();
+            IElement? cellWithTicketsCount = row.Children.LastOrDefault();
+            IElement? cellWithTrainNumber = row.Children.FirstOrDefault();
                 
-            if (cellWithTime is null || !cellWithTime.ClassList.Contains(CellWithTimeClass) ||
-                cellWithNumber is null || cellWithNumber.ClassList.Contains(CellWithNumberClass))
+            if (cellWithTicketsCount is null || !cellWithTicketsCount.ClassList.Contains(CellWithTicketsCountClass) ||
+                cellWithTrainNumber is null || !cellWithTrainNumber.ClassList.Contains(CellWithNumberClass))
             {
                 _logger.LogCritical(row.TextContent);
                     
@@ -38,7 +38,7 @@ public class TicketParser : IParser<TicketParserModel>
             }
         
             //если нет мест то на аттрибут навешивается дополнительный класс empty
-            if (cellWithTime.ClassList.Contains(EmptyCellClass))
+            if (cellWithTicketsCount.ClassList.Contains(EmptyCellClass))
             {
                 continue;
             }

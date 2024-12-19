@@ -33,7 +33,7 @@ public class Observer : ITicketObserver
         _workingThread = new Thread(Observe);
 
         //_observationDate = DateOnly.FromDateTime(DateTime.Today);
-        _observationDate = new DateOnly(2024, 12, 18);
+        _observationDate = new DateOnly(2024, 12, 20);
         
         string uri = configuration.GetSection("uri").Value ?? throw new NullReferenceException("uri");
         _uri = uri + _observationDate.ToString("yyyy-MM-dd");
@@ -77,9 +77,10 @@ public class Observer : ITicketObserver
     {
         while (Interlocked.Read(ref _isRunning) == 1)
         {
-            if (_observationDate > DateOnly.FromDateTime(DateTime.Today))
+            if (_observationDate < DateOnly.FromDateTime(DateTime.Today))
             {
-                _logger.LogInformation("End observation.");
+                _logger.LogCritical("End observation.");
+                break;
             }
 
             _logger.LogInformation("Sending request...");
@@ -90,21 +91,14 @@ public class Observer : ITicketObserver
             List<Ticket> availableTickets = _parser.Parse(document)
                 .Select(x => new Ticket(
                     x.TrainNumber,
-                    _observationDate.ToDateTime(x.DepartureTime),
-                    lastRequestTime))
-                .ToList();
-
-            List<Ticket> existingTickets = _dbContext.Set<Ticket>()
-                .Where(dbTicket => availableTickets.Any(x =>
-                    x.TrainNumber == dbTicket.TrainNumber &&
-                    x.DepartureDate == dbTicket.DepartureDate))
+                    DateTime.SpecifyKind(_observationDate.ToDateTime(x.DepartureTime), DateTimeKind.Utc),
+                    DateTime.SpecifyKind(lastRequestTime, DateTimeKind.Utc)))
                 .ToList();
 
             foreach (var availableTicket in availableTickets)
             {
-                var ticket = existingTickets.FirstOrDefault(t =>
-                    t.TrainNumber == availableTicket.TrainNumber &&
-                    t.DepartureDate == availableTicket.DepartureDate);
+                var ticket = _dbContext.Set<Ticket>().FirstOrDefault(t => 
+                    t.TrainNumber == availableTicket.TrainNumber && t.DepartureDate == availableTicket.DepartureDate);
 
                 if (ticket is null)
                 {
