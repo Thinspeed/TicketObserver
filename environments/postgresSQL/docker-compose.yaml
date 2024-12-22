@@ -2,6 +2,9 @@ services:
     postgres:
         image: postgres:16.4
         container_name: postgres
+        hostname: postgres
+        networks:
+            - tickets_network
         environment:
             POSTGRES_DB: "postgres"
             POSTGRES_USER: "observer"
@@ -20,6 +23,11 @@ services:
             retries: 5
             start_period: 10s
         restart: unless-stopped
+        command: ["postgres", "-c", "wal_level=logical"]
 
 volumes:
     tickets-data:
+
+networks:
+  tickets_network:
+    external: true

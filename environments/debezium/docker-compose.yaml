@@ -1,0 +1,14 @@
+services:
+  debezium-server:
+    image: quay.io/debezium/server:3.0
+    container_name: debezium
+    networks:
+      - tickets_network
+    ports:
+      - 8080:8080
+    volumes:
+      - ./conf:/debezium/config      
+
+networks:
+  tickets_network:
+    external: true

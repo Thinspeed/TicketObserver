@@ -1,0 +1,9 @@
+FROM rabbitmq:4-management
+
+ADD ./init/init.sh /init.sh
+ADD ./init/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
+RUN chmod +x /init.sh
+
+EXPOSE 5672 15672
+
+ENTRYPOINT ["/bin/bash", "-c", "/init.sh & rabbitmq-server"]
