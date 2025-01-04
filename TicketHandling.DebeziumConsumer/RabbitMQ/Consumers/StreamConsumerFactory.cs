@@ -1,8 +1,8 @@
 using System.Net;
 using RabbitMQ.Stream.Client;
-using TicketHandling.DebeziumConsumer.Consumers.Abstractions;
+using TicketHandling.DebeziumConsumer.RabbitMQ.Abstractions;
 
-namespace TicketHandling.DebeziumConsumer.Consumers.Defaults;
+namespace TicketHandling.DebeziumConsumer.RabbitMQ.Consumers;
 
 public class StreamConsumerFactoryConfiguration
 {
@@ -21,7 +21,7 @@ public class StreamConsumerFactoryConfiguration
     public required string Reference { get; init; }
 }
 
-public class StreamConsumerFactory<TMessage> : IConsumerFactory<ICustomConsumer, TMessage>
+public class StreamConsumerFactory<TMessage> : IConsumerFactory<BatchStreamConsumer<TMessage>, TMessage[]>
 {
     private StreamSystem _streamSystem;
     private string _streamName;
@@ -52,9 +52,9 @@ public class StreamConsumerFactory<TMessage> : IConsumerFactory<ICustomConsumer,
     }
     
     
-    public ICustomConsumer CreateConsumer(Func<TMessage[], Task> messageHandler)
+    public BatchStreamConsumer<TMessage> CreateConsumer(IMessageHandler<TMessage[]>[] handlers)
     {
-        var consumer = new BatchStreamConsumer<TMessage>(_streamSystem, _reference, _streamName, 10, 1500, messageHandler);
+        var consumer = new BatchStreamConsumer<TMessage>(_streamSystem, _reference, _streamName, 10, 1500, handlers);
         
         return consumer;
     }

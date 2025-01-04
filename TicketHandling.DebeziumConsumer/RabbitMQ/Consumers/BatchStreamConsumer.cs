@@ -1,10 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Stream.Client;
-using RabbitMQ.Stream.Client.Reliable;
-using TicketHandling.DebeziumConsumer.Consumers.Abstractions;
+using TicketHandling.DebeziumConsumer.RabbitMQ.Abstractions;
 
-namespace TicketHandling.DebeziumConsumer.Consumers.Defaults;
+namespace TicketHandling.DebeziumConsumer.RabbitMQ.Consumers;
 
 public class BatchStreamConsumer<TMessage> : ICustomConsumer
 {
@@ -17,14 +16,13 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
     
     private Message[] _buffer;
     private readonly object _lock = new();
-    private int _maxBatchSize;
+    private readonly int _maxBatchSize;
     private int _currentBufferIndex;
     private readonly int _intervalMilliseconds;
     
     private ulong _status;
-    private int _flushStatus;
 
-    private Func<TMessage[], Task> _messageHandler;
+    IMessageHandler<TMessage[]>[] _handlers;
     
     public BatchStreamConsumer(
         StreamSystem streamSystem, 
@@ -32,7 +30,7 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
         string streamName, 
         int batchSize, 
         int intervalMilliseconds, 
-        Func<TMessage[], Task> messageHandler)
+        IMessageHandler<TMessage[]>[] handlers)
     {
         _streamSystem = streamSystem;
         
@@ -45,7 +43,7 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
         _reference = reference;
         _streamName = streamName;
         
-        _messageHandler = messageHandler;
+        _handlers = handlers;
     }
 
     public bool IsRunning => Interlocked.Read(ref _status) == 1;
@@ -63,9 +61,7 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
             _currentOffset = 0;
             offsetSpecification = new OffsetTypeFirst();
         }
-
-        _currentOffset = 0;
-        offsetSpecification = new OffsetTypeFirst();
+        
         var consumerConfig = new RawConsumerConfig(_streamName)
         {
             Reference = _reference,
@@ -120,13 +116,13 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
     
     private async Task FlushBuffer()
     {
-        Message[] batch;
+        Message[] buffer;
         int length;
         ulong offset;
         
         lock (_lock)
         {
-            batch = _buffer;
+            buffer = _buffer;
             length = _currentBufferIndex;
             offset = _currentOffset;
             
@@ -135,13 +131,21 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
         }
 
         if (length == 0) return;
-        
-        await _messageHandler(batch
+
+        TMessage[] batch = buffer
             .Take(length)
-            .Select(x => 
-                JsonSerializer.Deserialize<TMessage>(Encoding.UTF8.GetString(x.Data.Contents)) 
+            .Select(x =>
+                JsonSerializer.Deserialize<TMessage>(Encoding.UTF8.GetString(x.Data.Contents))
                 ?? throw new Exception("failed to deserialize message"))
-            .ToArray());
+            .ToArray();
+        
+        var tasks = new Task[_handlers.Length];
+        for (int i = 0; i < _handlers.Length; i++)
+        {
+            tasks[i] = _handlers[i].Handle(batch);
+        }
+        
+        await Task.WhenAll(tasks);
         
         await _consumer.StoreOffset(offset);
     }

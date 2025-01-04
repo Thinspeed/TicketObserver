@@ -1,5 +1,6 @@
 using System.Text.Json;
 using TicketHandling.DebeziumConsumer.Consumers;
+using TicketHandling.DebeziumConsumer.RabbitMQ;
 
 namespace TicketHandling.DebeziumConsumer.Extensions;
 

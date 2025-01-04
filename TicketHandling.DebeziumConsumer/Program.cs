@@ -1,15 +1,9 @@
-﻿using System.Net;
-using System.Net.Mime;
-using System.Text;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using RabbitMQ.Stream.Client;
-using RabbitMQ.Stream.Client.Reliable;
+﻿using Microsoft.Extensions.Hosting;
 using TicketHandling.DebeziumConsumer.Consumers;
-using TicketHandling.DebeziumConsumer.Consumers.Abstractions;
-using TicketHandling.DebeziumConsumer.Consumers.Defaults;
+using TicketHandling.DebeziumConsumer.RabbitMQ;
+using TicketHandling.DebeziumConsumer.RabbitMQ.Abstractions;
+using TicketHandling.DebeziumConsumer.RabbitMQ.Consumers;
+using TicketHandling.DebeziumConsumer.RabbitMQ.Handlers;
 
 var conf = new StreamConsumerFactoryConfiguration()
 {
@@ -21,17 +15,9 @@ var conf = new StreamConsumerFactoryConfiguration()
     Reference = "TicketHandling.DebeziumConsumer"
 };
     
-IConsumerFactory<ICustomConsumer, DebeziumMessage> consumerFactory = await StreamConsumerFactory<DebeziumMessage>.CreateAsync(conf);
-ICustomConsumer consumer = consumerFactory.CreateConsumer(async (DebeziumMessage[] batch) =>
-{
-    Console.WriteLine($"Consumed messages: {batch.Length}");
-    for (int i = 0; i < batch.Length; i++)
-    {
-        Console.WriteLine(batch[i]);
-    }
-    
-    await Task.CompletedTask;
-});
+var consumerFactory = await StreamConsumerFactory<DebeziumMessage>.CreateAsync(conf);
+
+ICustomConsumer consumer = consumerFactory.CreateConsumer([new DebeziumBatchHandler()]);
 
 await consumer.StartAsync();
 
