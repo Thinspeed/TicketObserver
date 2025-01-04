@@ -14,8 +14,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppDefinition", "AppDefinit
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EfSelector", "EfSelector\EfSelector.csproj", "{484FEA2C-DA78-486F-B936-CAC58780DDCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketHandling.Mailing", "TicketHandling.Mailing\TicketHandling.Mailing.csproj", "{310738F7-054D-4E0A-9175-78BA0ED6FB07}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketHandling.DebeziumConsumer", "TicketHandling.DebeziumConsumer\TicketHandling.DebeziumConsumer.csproj", "{BE3189AF-2599-4EA0-AD2E-8642516586F9}"
 EndProject
 Global
@@ -52,10 +50,6 @@ Global
 		{484FEA2C-DA78-486F-B936-CAC58780DDCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{484FEA2C-DA78-486F-B936-CAC58780DDCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{484FEA2C-DA78-486F-B936-CAC58780DDCE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{310738F7-054D-4E0A-9175-78BA0ED6FB07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{310738F7-054D-4E0A-9175-78BA0ED6FB07}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{310738F7-054D-4E0A-9175-78BA0ED6FB07}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{310738F7-054D-4E0A-9175-78BA0ED6FB07}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BE3189AF-2599-4EA0-AD2E-8642516586F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BE3189AF-2599-4EA0-AD2E-8642516586F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE3189AF-2599-4EA0-AD2E-8642516586F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
