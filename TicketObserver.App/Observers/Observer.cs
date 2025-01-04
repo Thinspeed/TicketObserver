@@ -33,7 +33,7 @@ public class Observer : ITicketObserver
         _workingThread = new Thread(Observe);
 
         //_observationDate = DateOnly.FromDateTime(DateTime.Today);
-        _observationDate = new DateOnly(2024, 12, 20);
+        _observationDate = new DateOnly(2025, 1, 05);
         
         string uri = configuration.GetSection("uri").Value ?? throw new NullReferenceException("uri");
         _uri = uri + _observationDate.ToString("yyyy-MM-dd");
