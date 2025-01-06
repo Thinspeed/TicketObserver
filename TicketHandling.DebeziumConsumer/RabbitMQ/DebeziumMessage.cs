@@ -2,9 +2,9 @@ namespace TicketHandling.DebeziumConsumer.RabbitMQ;
 
 public class DebeziumMessage
 {
-    public object Before { get; set; }
+    public object? Before { get; set; }
     
-    public object After { get; set; }
+    public object? After { get; set; }
 
     public Source Source { get; set; }
     

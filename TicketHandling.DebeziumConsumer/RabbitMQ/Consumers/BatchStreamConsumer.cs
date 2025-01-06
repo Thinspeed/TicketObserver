@@ -10,6 +10,8 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
     private readonly StreamSystem _streamSystem;
     private readonly string _reference;
     private readonly string _streamName;
+
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
     
     private RawConsumer _consumer = null!;
     private ulong _currentOffset;
@@ -33,6 +35,11 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
         IMessageHandler<TMessage[]>[] handlers)
     {
         _streamSystem = streamSystem;
+
+        _jsonSerializerOptions = new JsonSerializerOptions()
+        {
+            PropertyNameCaseInsensitive = true
+        };
         
         _buffer = new Message[batchSize];
         _currentBufferIndex = 0;
@@ -135,7 +142,7 @@ public class BatchStreamConsumer<TMessage> : ICustomConsumer
         TMessage[] batch = buffer
             .Take(length)
             .Select(x =>
-                JsonSerializer.Deserialize<TMessage>(Encoding.UTF8.GetString(x.Data.Contents))
+                JsonSerializer.Deserialize<TMessage>(Encoding.UTF8.GetString(x.Data.Contents), _jsonSerializerOptions)
                 ?? throw new Exception("failed to deserialize message"))
             .ToArray();
         
