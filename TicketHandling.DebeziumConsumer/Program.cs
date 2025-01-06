@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
-using TicketHandling.DebeziumConsumer.Consumers;
+using StackExchange.Redis;
 using TicketHandling.DebeziumConsumer.RabbitMQ;
 using TicketHandling.DebeziumConsumer.RabbitMQ.Abstractions;
 using TicketHandling.DebeziumConsumer.RabbitMQ.Consumers;
@@ -17,13 +17,18 @@ var conf = new StreamConsumerFactoryConfiguration()
     
 var consumerFactory = await StreamConsumerFactory<DebeziumMessage>.CreateAsync(conf);
 
-ICustomConsumer consumer = consumerFactory.CreateConsumer([new DebeziumBatchHandler()]);
+ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("192.168.0.102:6379,password=redis");
+
+ICustomConsumer consumer = consumerFactory.CreateConsumer([new DebeziumBatchHandler(redis)]);
 
 await consumer.StartAsync();
 
 Console.ReadKey();
 
 await consumer.StopAsync();
+
+redis.Dispose();
+
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
