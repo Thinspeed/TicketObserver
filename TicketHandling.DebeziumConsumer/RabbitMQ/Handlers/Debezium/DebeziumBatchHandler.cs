@@ -1,11 +1,11 @@
 using System.Text.Json;
 using StackExchange.Redis;
-using TicketHandling.DebeziumConsumer.Consumers;
 using TicketHandling.DebeziumConsumer.Extensions;
 using TicketHandling.DebeziumConsumer.RabbitMQ.Abstractions;
+using TicketHandling.DebeziumConsumer.RabbitMQ.Models;
 using TicketObserver.Domain.Entities;
 
-namespace TicketHandling.DebeziumConsumer.RabbitMQ.Handlers;
+namespace TicketHandling.DebeziumConsumer.RabbitMQ.Handlers.Debezium;
 
 public class DebeziumBatchHandler : IMessageHandler<DebeziumMessage[]>
 {

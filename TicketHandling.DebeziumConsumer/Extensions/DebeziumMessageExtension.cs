@@ -1,6 +1,6 @@
 using System.Text.Json;
-using TicketHandling.DebeziumConsumer.Consumers;
 using TicketHandling.DebeziumConsumer.RabbitMQ;
+using TicketHandling.DebeziumConsumer.RabbitMQ.Models;
 
 namespace TicketHandling.DebeziumConsumer.Extensions;
 

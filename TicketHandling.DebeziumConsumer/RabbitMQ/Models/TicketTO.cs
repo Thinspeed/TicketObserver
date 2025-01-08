@@ -1,5 +1,5 @@
 
-namespace TicketHandling.DebeziumConsumer.Consumers;
+namespace TicketHandling.DebeziumConsumer.RabbitMQ.Models;
 
 public class TicketTO
 {

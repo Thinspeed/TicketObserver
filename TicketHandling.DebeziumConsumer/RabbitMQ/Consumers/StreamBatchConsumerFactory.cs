@@ -21,20 +21,22 @@ public class StreamConsumerFactoryConfiguration
     public required string Reference { get; init; }
 }
 
-public class StreamConsumerFactory<TMessage> : IConsumerFactory<BatchStreamConsumer<TMessage>, TMessage[]>
+//todo добавить деструктор, либо сделать IConsumerFactory disposable
+//todo тоже для ICustomConsumer, нужна очистка ресурсов
+public class StreamBatchConsumerFactory<TMessage> : IConsumerFactory<BatchStreamConsumer<TMessage>, TMessage[]>
 {
     private StreamSystem _streamSystem;
     private string _streamName;
     private string _reference;
     
-    private StreamConsumerFactory(StreamSystem streamSystem, string streamName, string reference)
+    private StreamBatchConsumerFactory(StreamSystem streamSystem, string streamName, string reference)
     {
         _streamSystem = streamSystem;
         _streamName = streamName;
         _reference = reference;
     } 
     
-    public static async Task<StreamConsumerFactory<TMessage>> CreateAsync(StreamConsumerFactoryConfiguration configuration)
+    public static async Task<StreamBatchConsumerFactory<TMessage>> CreateAsync(StreamConsumerFactoryConfiguration configuration)
     {
         var streamSystemConfig = new StreamSystemConfig()
         {
@@ -46,7 +48,7 @@ public class StreamConsumerFactory<TMessage> : IConsumerFactory<BatchStreamConsu
 
         var streamSystem = await StreamSystem.Create(streamSystemConfig);
 
-        var factory = new StreamConsumerFactory<TMessage>(streamSystem, configuration.StreamName, configuration.Reference);
+        var factory = new StreamBatchConsumerFactory<TMessage>(streamSystem, configuration.StreamName, configuration.Reference);
         
         return factory;
     }

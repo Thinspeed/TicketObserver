@@ -1,4 +1,4 @@
-namespace TicketHandling.DebeziumConsumer.RabbitMQ;
+namespace TicketHandling.DebeziumConsumer.RabbitMQ.Models;
 
 public class DebeziumMessage
 {

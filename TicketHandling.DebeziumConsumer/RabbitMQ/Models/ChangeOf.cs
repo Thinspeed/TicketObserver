@@ -1,4 +1,4 @@
-namespace TicketHandling.DebeziumConsumer;
+namespace TicketHandling.DebeziumConsumer.RabbitMQ.Models;
 
 public class ChangeOf<T> 
     where T : class

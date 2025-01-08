@@ -15,7 +15,14 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\AppDefinition\AppDefinition.csproj" />
       <ProjectReference Include="..\TicketObserver.Domain\TicketObserver.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
